@@ -1,5 +1,10 @@
 # 可售卖测评网站
 
+**线上地址（已部署）：**
+- 测评首页：https://gs512175.github.io/quiz-site/
+- 后台管理：https://gs512175.github.io/quiz-site/admin.html （密钥 `yatou@1222`）
+- GitHub 仓库：https://github.com/gs512175/quiz-site
+
 一个**免构建**的测评网站，配套 Supabase 后端，支持**多套测评题库**与后台管理。支持「访问码」开门（每码 3 次）、逐题作答（可返回上一题）、结果长图保存、结果链接分享、再测一次、好评有礼，全移动端适配。题库内容在 `js/quizzes.js`（已内置 10 套示例），连接/店铺/默认启用在 `js/config.js`。
 
 ## 目录结构
