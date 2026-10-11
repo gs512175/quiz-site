@@ -15,7 +15,7 @@ window.CONFIG = {
   // ===== Supabase 连接 =====
   supabaseUrl: "https://vonimlqbbecgxsykjdgt.supabase.co",
   supabaseAnonKey:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvbmltbHFiYmVjZ3hzeWtqZGd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2OTg1OTksImV4cCI6MjEwNzI3NDU5OX0.KnnDppt_ikPM33MtMPa4hZtFb_B4HUQQqj05rgG9If",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvbmltbHFiYmVjZ3hzeWtqZGd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2OTg1OTksImV4cCI6MjEwNzI3NDU5OX0.KnnDppt_ikPM33MtMPa4hZtFb_B4HUQQqj05rgG9IfI",
 
   // ===== 后台管理员密钥（★故意留空，不要填） =====
   // 原因：本仓库要推到公开的 GitHub Pages，密钥写进文件等于公开，
