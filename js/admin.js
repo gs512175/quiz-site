@@ -84,6 +84,7 @@
             (isActive ? "<span class='quiz-on'>● 已启用</span>" : "") +
           "</div>" +
           "<div class='quiz-actions'>" +
+            "<button class='btn btn-ghost sm' data-action='link' data-id='" + esc(q.id) + "'>复制链接</button>" +
             (isActive ? "" : "<button class='btn btn-ghost sm' data-action='active' data-id='" + esc(q.id) + "'>启用</button>") +
             "<button class='btn btn-ghost sm danger' data-action='del' data-id='" + esc(q.id) + "'>删除</button>" +
           "</div>" +
@@ -116,6 +117,45 @@
     } catch (e) {
       setMsg($("quiz-msg"), "删除失败", "err");
       console.error(e);
+    }
+  }
+
+  // 每套测评一个专属链接：https://xxx.github.io/quiz-site/?q=题库id
+  // 网店可上架 10 个不同链接，买家点哪个就测哪套（访问码未绑定题库时以此为准）
+  function siteBase() {
+    return location.origin + location.pathname.replace(/admin\.html$/, "");
+  }
+  function quizLink(id) {
+    return siteBase() + "?q=" + id;
+  }
+  async function onCopyLink(id) {
+    const url = quizLink(id);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+        setMsg($("quiz-msg"), "已复制「" + (QBYID[id] || id) + "」专属链接", "ok");
+        return;
+      }
+      throw new Error("no clipboard");
+    } catch (e) {
+      prompt("复制这个链接（不同主题链接不同）：", url);
+    }
+  }
+
+  // 一次性导出全部主题链接（上架多个商品时直接粘走）
+  async function onCopyAllLinks() {
+    try {
+      const list = await window.SB.getQuizzes();
+      if (!list.length) { setMsg($("quiz-msg"), "暂无题库", "err"); return; }
+      const text = list.map((q) => (q.title || q.id) + "\n" + quizLink(q.id)).join("\n\n");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        setMsg($("quiz-msg"), "已复制 " + list.length + " 条主题链接，可直接粘到商品详情", "ok");
+        return;
+      }
+      throw new Error("no clipboard");
+    } catch (e) {
+      setMsg($("quiz-msg"), "复制失败：" + (e && e.message ? e.message : e), "err");
     }
   }
 
@@ -206,6 +246,7 @@
     $("btn-refresh").addEventListener("click", refresh);
     $("btn-logout").addEventListener("click", logout);
     $("btn-import").addEventListener("click", onImport);
+    $("btn-copy-all-links").addEventListener("click", onCopyAllLinks);
     // 题库列表事件委托
     $("quiz-list").addEventListener("click", (e) => {
       const btn = e.target.closest("button");
@@ -214,6 +255,7 @@
       const action = btn.getAttribute("data-action");
       if (action === "active") onSetActive(id);
       else if (action === "del") onDelete(id);
+      else if (action === "link") onCopyLink(id);
     });
     if (key) { C.adminKey = key; show("dash"); renderQuizList(); refresh(); }
     else show("login");

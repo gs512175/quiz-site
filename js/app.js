@@ -6,7 +6,11 @@
   const $ = (id) => document.getElementById(id);
 
   // ---------- 状态 ----------
+  // 网址里 ?q=题库id → 该链接固定测评这一套（可上架 10 个不同链接/商品）
+  const urlQuizId = (new URLSearchParams(location.search).get("q") || "").trim();
+
   const S = {
+    urlQuizId: urlQuizId,
     code: sessionStorage.getItem("mq_code") || "",
     answers: JSON.parse(sessionStorage.getItem("mq_answers") || "[]"),
     index: parseInt(sessionStorage.getItem("mq_index") || "0", 10),
@@ -98,7 +102,16 @@
   async function init() {
     // 多题库：先取「默认启用题」作为密码门的展示/兜底；
     // 用户实际测哪一套，由所输访问码绑定的 quiz_id 决定（见 loadQuizByCode）
-    Q = await window.SB.getActiveQuiz();
+    // 链接带 ?q=xxx 时，密码门直接展示该套测评（否则展示默认启用题）
+    if (urlQuizId) {
+      try {
+        const byUrl = await window.SB.getQuizById(urlQuizId);
+        if (byUrl && byUrl.questions && byUrl.questions.length) Q = byUrl;
+      } catch (e) {
+        console.warn("按链接取题库失败，回退默认启用题", e);
+      }
+    }
+    if (!Q) Q = await window.SB.getActiveQuiz();
     if (!Q || !Q.questions) {
       $("screen-gate").innerHTML = '<div class="card center"><h1 class="big-title">暂无题库</h1><p class="muted">请到后台添加或启用一套测评。</p></div>';
       return;
@@ -141,8 +154,10 @@
   // 不同码可绑不同题库，多套测评同时在线、互不干扰。
   // 若码未绑定（quizId 为空）则沿用默认启用题。
   async function loadQuizByCode(quizId) {
-    if (quizId) {
-      const qz = await window.SB.getQuizById(quizId);
+    // 优先级：访问码绑定的题库 > 网址 ?q= 指定的题库 > 默认启用题
+    const want = quizId || S.urlQuizId;
+    if (want) {
+      const qz = await window.SB.getQuizById(want);
       if (qz && qz.questions && qz.questions.length) {
         Q = qz;
         document.title = Q.title;

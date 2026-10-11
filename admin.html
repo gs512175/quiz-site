@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>测评管理后台</title>
-  <link rel="stylesheet" href="css/style.css?v=13" />
+  <link rel="stylesheet" href="css/style.css?v=14" />
 </head>
 <body class="admin">
   <main class="app">
@@ -42,7 +42,10 @@
         <section class="panel">
           <div class="panel-head">
             <h2>题库管理</h2>
-            <span class="panel-sub">「已启用」= 默认测评，未绑定题库的访问码都用它。点「启用」即可切换。</span>
+            <span class="panel-sub">「已启用」= 默认测评，未绑定题库的访问码都用它。每套测评有专属链接，可直接上架不同商品。</span>
+          </div>
+          <div class="panel-tools">
+            <button id="btn-copy-all-links" class="btn btn-ghost sm">复制全部主题链接</button>
           </div>
           <div id="quiz-list" class="quiz-list"></div>
           <p id="quiz-msg" class="msg"></p>
@@ -92,10 +95,10 @@
   </main>
 
   <!-- 依赖已下载到本地 lib/：自包含、不依赖外部 CDN -->
-  <script src="lib/supabase.min.js?v=13"></script>
-  <script src="js/config.js?v=13"></script>
-  <script src="js/quizzes.js?v=13"></script>
-  <script src="js/supabase.js?v=13"></script>
-  <script src="js/admin.js?v=13"></script>
+  <script src="lib/supabase.min.js?v=14"></script>
+  <script src="js/config.js?v=14"></script>
+  <script src="js/quizzes.js?v=14"></script>
+  <script src="js/supabase.js?v=14"></script>
+  <script src="js/admin.js?v=14"></script>
 </body>
 </html>

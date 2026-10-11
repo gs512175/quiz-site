@@ -228,6 +228,7 @@ select.field { appearance: none; background-image: url("data:image/svg+xml;chars
 .panel-head { margin-bottom: 14px; }
 .panel-head h2 { font-size: 17px; margin: 0 0 5px; }
 .panel-sub { display: block; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.panel-tools { display: flex; gap: 8px; margin: 0 0 12px; }
 
 /* 题库列表 */
 .quiz-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
