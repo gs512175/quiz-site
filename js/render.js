@@ -44,8 +44,9 @@
         "</div>";
     }
 
-    // 店铺信息
-    if (store) {
+    // 店铺信息（未填写真实店铺名时不显示，避免出现占位文字）
+    var hasStore = store && store.name && store.name !== "你的店铺名";
+    if (hasStore) {
       html += '<div class="result-foot">' +
         '<div class="store-name">🛒 ' + esc(store.name) + "</div>" +
         '<div class="store-tip">搜索店铺名，购买更多趣味测评 🔍</div>' +

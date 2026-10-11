@@ -77,7 +77,7 @@
       list.forEach((q) => {
         const isActive = q.id === activeId;
         const mode = q.resultMode === "type" ? "type" : "level";
-        html += "<div class='quiz-row'>" +
+        html += "<div class='quiz-row" + (isActive ? " is-active" : "") + "'>" +
           "<div class='quiz-meta'>" +
             "<span class='quiz-name'>" + esc(q.title || q.id) + "</span>" +
             "<span class='quiz-mode mode-" + mode + "'>" + mode + "</span>" +

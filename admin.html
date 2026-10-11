@@ -4,33 +4,52 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>测评管理后台</title>
-  <link rel="stylesheet" href="css/style.css?v=12" />
+  <link rel="stylesheet" href="css/style.css?v=13" />
 </head>
-<body>
+<body class="admin">
   <main class="app">
     <!-- 登录 -->
     <section id="admin-login" class="screen">
-      <div class="card center">
-        <h1 class="big-title">管理后台</h1>
-        <label class="field-label">管理员密钥</label>
-        <input id="admin-key" class="code-input" type="password" placeholder="请输入管理员密钥" autocomplete="off" />
+      <div class="auth-card">
+        <div class="auth-badge">测</div>
+        <h1>测评管理后台</h1>
+        <p class="auth-sub">输入管理员密钥进入</p>
+        <label class="field-label" for="admin-key">管理员密钥</label>
+        <input id="admin-key" class="field" type="password" placeholder="请输入管理员密钥" autocomplete="off" />
         <button id="btn-login" class="btn btn-primary">进入后台</button>
         <p id="login-msg" class="msg"></p>
-        <p class="hint">测试模式：任意字符即可进入</p>
       </div>
     </section>
 
     <!-- 控制台 -->
     <section id="admin-dash" class="screen hidden">
-      <div class="card">
-        <h1 class="big-title" style="font-size:22px">题库管理</h1>
-        <p class="muted" style="margin:-6px 0 14px">「已启用」= 默认测评（未绑定的码用它）。<b>多主题同时可用</b>：生成访问码时选一套绑定，不同码可测不同测评，全部同时在线。</p>
-        <div id="quiz-list" class="quiz-list"></div>
-        <p id="quiz-msg" class="msg"></p>
+      <header class="topbar">
+        <div class="brand">
+          <span class="logo">测</span>
+          <div class="brand-txt">
+            <b>测评管理后台</b>
+            <small>题库 · 访问码 · 多主题同时可用</small>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button id="btn-refresh" class="btn btn-ghost sm">刷新</button>
+          <button id="btn-logout" class="btn btn-ghost sm">退出</button>
+        </div>
+      </header>
 
-        <div class="import-box">
-          <div class="import-title">导入新题库（粘贴 JSON，自动识别 level / type）</div>
-          <textarea id="import-json" class="import-area" placeholder='粘贴格式示例：
+      <div class="dash-grid">
+        <!-- 题库管理 -->
+        <section class="panel">
+          <div class="panel-head">
+            <h2>题库管理</h2>
+            <span class="panel-sub">「已启用」= 默认测评，未绑定题库的访问码都用它。点「启用」即可切换。</span>
+          </div>
+          <div id="quiz-list" class="quiz-list"></div>
+          <p id="quiz-msg" class="msg"></p>
+
+          <details class="import-box">
+            <summary>导入新题库（粘贴 JSON，自动识别 level / type）</summary>
+            <textarea id="import-json" class="import-area" placeholder='粘贴格式示例：
 {
   "id": "myquiz",
   "title": "我的测评",
@@ -45,35 +64,38 @@
   "levels": [ { "min": 0, "label": "档1", "analysis": "..." } ]
 }
 // 若用 type 模式，选项改为 scores:{"A":3} 并提供 types 数组'></textarea>
-          <button id="btn-import" class="btn btn-primary">导入题库</button>
-          <p id="import-msg" class="msg"></p>
-        </div>
-      </div>
+            <button id="btn-import" class="btn btn-primary">导入题库</button>
+            <p id="import-msg" class="msg"></p>
+          </details>
+        </section>
 
-      <div class="card">
-        <h1 class="big-title" style="font-size:22px">访问码管理</h1>
-        <div class="gen-row">
-          <select id="gen-quiz" class="code-input" style="margin-bottom:0"></select>
-          <input id="gen-count" class="code-input" type="number" min="1" max="500" value="10" style="margin-bottom:0" />
-          <input id="gen-note" class="code-input" type="text" placeholder="备注（如订单号）" style="margin-bottom:0" />
-          <button id="btn-gen" class="btn btn-primary" style="margin-bottom:0">生成</button>
-        </div>
-        <p class="hint" style="margin:-2px 0 10px">选择「绑定测评」后生成：这批码只能测所选测评。留空（默认测评）则跟随后台启用的那套。</p>
-        <div class="quiz-nav">
-          <button id="btn-refresh" class="btn btn-ghost">刷新列表</button>
-          <button id="btn-logout" class="btn btn-ghost">退出</button>
-        </div>
-        <p id="dash-msg" class="msg"></p>
-        <div id="code-table" class="code-table"></div>
+        <!-- 访问码管理 -->
+        <section class="panel">
+          <div class="panel-head">
+            <h2>访问码管理</h2>
+            <span class="panel-sub">每个码绑定一套测评；不同码可同时测不同主题，互不干扰。</span>
+          </div>
+
+          <div class="gen-grid">
+            <select id="gen-quiz" class="field span2"></select>
+            <input id="gen-count" class="field" type="number" min="1" max="500" value="10" placeholder="数量" />
+            <input id="gen-note" class="field" type="text" placeholder="备注（如订单号）" />
+            <button id="btn-gen" class="btn btn-primary span2">生成访问码</button>
+          </div>
+          <p class="gen-tip">「绑定测评」留空 = 默认测评（跟随上面已启用的那套）。每个码可测 3 次。</p>
+
+          <p id="dash-msg" class="msg"></p>
+          <div id="code-table" class="code-table"></div>
+        </section>
       </div>
     </section>
   </main>
 
   <!-- 依赖已下载到本地 lib/：自包含、不依赖外部 CDN -->
-  <script src="lib/supabase.min.js?v=12"></script>
-  <script src="js/config.js?v=12"></script>
-  <script src="js/quizzes.js?v=12"></script>
-  <script src="js/supabase.js?v=12"></script>
-  <script src="js/admin.js?v=12"></script>
+  <script src="lib/supabase.min.js?v=13"></script>
+  <script src="js/config.js?v=13"></script>
+  <script src="js/quizzes.js?v=13"></script>
+  <script src="js/supabase.js?v=13"></script>
+  <script src="js/admin.js?v=13"></script>
 </body>
 </html>
