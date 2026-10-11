@@ -1,8 +1,30 @@
 -- ============================================================
 --  测评网站  Supabase 数据库初始化
 --  执行方式：Supabase 控制台 → SQL Editor → 粘贴全部 → Run
---  注意：把下面 app.admin_key 的值改成与 config.js 的 adminKey 一致
+--  执行顺序：先跑本文件，再跑 seed.sql
 -- ============================================================
+--  管理员密钥存在 app_config 表里（不用 alter database 参数，
+--  那样在 Supabase 会报 42501 权限错误）。
+--  自己的密钥：把下面 app_config 里的 'CHANGE_ME_ADMIN_KEY' 改成你的，
+--  要跟 js/config.js 的 adminKey 完全一致。
+-- ============================================================
+
+-- ---------- 管理员配置表 ----------
+create table if not exists app_config (
+  key   text primary key,
+  value text not null
+);
+
+-- 首次写入默认密钥；重复执行不会覆盖你已改过的值
+insert into app_config (key, value) values ('admin_key', 'CHANGE_ME_ADMIN_KEY')
+  on conflict (key) do nothing;
+
+-- 禁止 anon 直接读取（RPC 是 security definer，可越过 RLS 读取）
+alter table app_config enable row level security;
+revoke all on app_config from anon;
+
+-- 以后想改密钥，直接执行这句（把 xxx 换成新密钥）：
+-- update app_config set value = 'xxx' where key = 'admin_key';
 
 -- 访问码：每码默认可测 max_uses 次，可绑定某一套题库（quiz_id 为空=用默认启用题）
 create table if not exists access_codes (
@@ -26,10 +48,6 @@ create table if not exists results (
 -- 禁止 anon 直接读写，只允许经 RPC（security definer）访问
 alter table access_codes enable row level security;
 alter table results      enable row level security;
-
--- 设置管理员密钥（改成你自己的！）
--- 也可在 Supabase 控制台 Database → Parameters 搜索 app.admin_key 设置
-alter database postgres set app.admin_key = 'CHANGE_ME_ADMIN_KEY';
 
 -- ---------- RPC 函数 ----------
 
@@ -78,7 +96,7 @@ $$;
 create or replace function admin_generate(p_key text, p_n int, p_note text, p_quiz_id text default null)
 returns jsonb language plpgsql security definer as $$
 begin
-  if p_key is distinct from coalesce(current_setting('app.admin_key', true), '') then
+  if p_key is distinct from (select value from app_config where key = 'admin_key') then
     return jsonb_build_object('ok', false, 'reason', 'bad_key');
   end if;
   insert into access_codes (code, note, quiz_id)
@@ -92,7 +110,7 @@ $$;
 create or replace function admin_list(p_key text)
 returns jsonb language plpgsql security definer as $$
 begin
-  if p_key is distinct from coalesce(current_setting('app.admin_key', true), '') then
+  if p_key is distinct from (select value from app_config where key = 'admin_key') then
     return jsonb_build_object('ok', false, 'reason', 'bad_key');
   end if;
   return (
@@ -108,11 +126,11 @@ end;
 $$;
 
 -- 授权 anon 调用以上 RPC
-grant execute on function validate_code(text)            to anon;
-grant execute on function create_result(jsonb)          to anon;
-grant execute on function get_result(text)              to anon;
-grant execute on function admin_generate(text, int, text) to anon;
-grant execute on function admin_list(text)              to anon;
+grant execute on function validate_code(text)                to anon;
+grant execute on function create_result(jsonb)               to anon;
+grant execute on function get_result(text)                   to anon;
+grant execute on function admin_generate(text, int, text, text) to anon;
+grant execute on function admin_list(text)                   to anon;
 
 -- ============================================================
 --  多题库：quizzes 表（每套测评完整存为 jsonb）
@@ -151,7 +169,7 @@ $$;
 create or replace function set_active_quiz(p_key text, p_id text)
 returns jsonb language plpgsql security definer as $$
 begin
-  if p_key is distinct from coalesce(current_setting('app.admin_key', true), '') then
+  if p_key is distinct from (select value from app_config where key = 'admin_key') then
     return jsonb_build_object('ok', false, 'reason', 'bad_key');
   end if;
   update quizzes set is_active = false;
@@ -165,7 +183,7 @@ create or replace function admin_upsert_quiz(p_key text, p_quiz jsonb)
 returns jsonb language plpgsql security definer as $$
 declare v_id text := p_quiz->>'id';
 begin
-  if p_key is distinct from coalesce(current_setting('app.admin_key', true), '') then
+  if p_key is distinct from (select value from app_config where key = 'admin_key') then
     return jsonb_build_object('ok', false, 'reason', 'bad_key');
   end if;
   if v_id is null or v_id = '' then
@@ -181,7 +199,7 @@ $$;
 create or replace function admin_delete_quiz(p_key text, p_id text)
 returns jsonb language plpgsql security definer as $$
 begin
-  if p_key is distinct from coalesce(current_setting('app.admin_key', true), '') then
+  if p_key is distinct from (select value from app_config where key = 'admin_key') then
     return jsonb_build_object('ok', false, 'reason', 'bad_key');
   end if;
   delete from quizzes where id = p_id;
@@ -189,9 +207,9 @@ begin
 end;
 $$;
 
-grant execute on function get_quizzes()               to anon;
-grant execute on function get_active_quiz()           to anon;
-grant execute on function get_quiz(text)               to anon;
-grant execute on function set_active_quiz(text, text) to anon;
+grant execute on function get_quizzes()                  to anon;
+grant execute on function get_active_quiz()              to anon;
+grant execute on function get_quiz(text)                 to anon;
+grant execute on function set_active_quiz(text, text)    to anon;
 grant execute on function admin_upsert_quiz(text, jsonb) to anon;
-grant execute on function admin_delete_quiz(text, text) to anon;
+grant execute on function admin_delete_quiz(text, text)  to anon;
