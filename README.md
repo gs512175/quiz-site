@@ -19,25 +19,38 @@ supabase/schema.sql  数据库建表 + RPC（含 quizzes 表）
 lib/              可选：把 CDN 依赖下载到这里做离线部署
 ```
 
+## 当前环境（已配置好，勿重复填）
+| 项 | 值 |
+|---|---|
+| Supabase Project URL | `https://vonimlqbbecgxsykjdgt.supabase.co` |
+| anon public key | 已写入 `js/config.js`（anon key 本就是公开的，放仓库没问题） |
+| `testMode` | `false`（正式模式，连真实数据库） |
+| 管理员密钥 | **未写入仓库**（防泄露），进 `admin.html` 时手动输入 |
+| ★还差 | `js/config.js` 里的 `store.name`（店铺名）和 `store.contact`（客服微信）——目前还是占位符 |
+
 ## 快速开始（3 步）
 
 ### 1. 建 Supabase 数据库
 1. 打开 https://supabase.com 新建项目（地区建议选 Singapore / Tokyo，国内访问更快）。
 2. 控制台 → SQL Editor → 新建查询 → 粘贴 `supabase/schema.sql` 全部内容 → Run。
-3. 把 SQL 里 `app.admin_key` 的值改成你自己的密钥（如 `'MyAdminKey123'`）。
-4. **再执行一次 `supabase/seed.sql`**（把 10 套题库灌进 `quizzes` 表）。
+3. **再执行一次 `supabase/seed.sql`**（把 10 套题库灌进 `quizzes` 表）。
    > ⚠️ 漏了这步，上线后用户会看到「暂无题库」——因为真实模式的题库来自数据库，不是前端文件。
-
-> 同时设置参数：控制台 Database → Parameters → 搜索 `app.admin_key` → 设为**同一个值**。
+4. 设置管理员密钥（密钥存在 `app_config` 表，不用数据库参数）：
+   ```sql
+   update app_config set value = '你的密钥' where key = 'admin_key';
+   ```
+   > ⚠️ 别用 `alter database ... set app.admin_key`——Supabase 的 SQL Editor 角色没有该权限，会整段报错。
 
 ### 2. 填配置 `js/config.js`
 ```js
-supabaseUrl:    "https://xxxx.supabase.co",   // Project → API
-supabaseAnonKey:"eyJ...",                      // Project → API → anon key
-adminKey:       "MyAdminKey123",               // 与上面的 app.admin_key 一致
+supabaseUrl:    "https://xxxx.supabase.co",   // Project → Data API → Project URL
+supabaseAnonKey:"eyJ...",                      // Project → API Keys → Legacy → anon public
+adminKey:       "",                            // ★保持空！见下方说明
 store: { name, contact, cashback },             // 店铺信息（好评有礼弹窗用）
 defaultActiveId:"banwei"                        // 默认启用的题库 id（对应 quizzes.js 里的某套）
 ```
+> **为什么 `adminKey` 故意留空**：站点要推到公开的 GitHub Pages，密钥写进文件等于公开，任何人都能进后台批量生成访问码（等于白送）。
+> 正确用法：打开 `admin.html`，在登录框**手动输入密钥**（同一标签页会记住），密钥只存在浏览器会话里。
 > 题库内容（题目/结果）全部在 `js/quizzes.js`，改主题或加题库改那里，不用动本文件。
 
 ### 3. 部署
