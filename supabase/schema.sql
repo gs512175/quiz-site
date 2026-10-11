@@ -153,10 +153,10 @@ $$;
 -- 取当前启用的题库（无则取第一个）
 create or replace function get_active_quiz()
 returns jsonb language sql security definer as $$
-  select data from quizzes where is_active is true
-  union all
-  select data from quizzes order by created_at limit 1
-  limit 1;
+  select coalesce(
+    (select data from quizzes where is_active is true limit 1),
+    (select data from quizzes order by created_at limit 1)
+  );
 $$;
 
 -- 按 id 取某套题库（用户输码后，按码绑定的 quiz_id 取对应测评）
