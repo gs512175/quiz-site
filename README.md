@@ -22,9 +22,11 @@ lib/              可选：把 CDN 依赖下载到这里做离线部署
 ## 快速开始（3 步）
 
 ### 1. 建 Supabase 数据库
-1. 打开 https://supabase.com 新建项目。
+1. 打开 https://supabase.com 新建项目（地区建议选 Singapore / Tokyo，国内访问更快）。
 2. 控制台 → SQL Editor → 新建查询 → 粘贴 `supabase/schema.sql` 全部内容 → Run。
 3. 把 SQL 里 `app.admin_key` 的值改成你自己的密钥（如 `'MyAdminKey123'`）。
+4. **再执行一次 `supabase/seed.sql`**（把 10 套题库灌进 `quizzes` 表）。
+   > ⚠️ 漏了这步，上线后用户会看到「暂无题库」——因为真实模式的题库来自数据库，不是前端文件。
 
 > 同时设置参数：控制台 Database → Parameters → 搜索 `app.admin_key` → 设为**同一个值**。
 
@@ -104,7 +106,21 @@ JSON 格式（可省略 `resultMode`，让系统自动识别）：
 ```
 
 ## 依赖说明
-运行时从 CDN 加载 `supabase-js` 与 `html2canvas`。如需**完全离线/自包含**，把这两个文件下载到 `lib/` 并修改各 HTML 的 `<script src>` 为本地路径即可。
+`supabase-js` 与 `html2canvas` **已下载到 `lib/` 并本地引用**（自包含）。不依赖任何外部 CDN，国内访问稳定、也不会因第三方 CDN 故障而失效。
+- 如需升级版本，替换 `lib/` 下两个文件即可。
+- 若想改回 CDN，把各 HTML 里 `lib/xxx.min.js` 换回对应的 `<script src="https://...">` 即可。
+
+## 部署到 GitHub Pages
+1. 在 [github.com](https://github.com) 新建仓库（如 `quiz-site`），**不要**勾选初始化 README。
+2. 本机进入项目目录，用 `gh` 一键推送（需先 `gh auth login` 登录一次）：
+   ```bash
+   gh repo create quiz-site --public --source=. --push
+   ```
+   > 不用 `gh` 也可：`git remote add origin https://github.com/<用户名>/quiz-site.git && git push -u origin main`
+3. 仓库页面 → **Settings → Pages** → Source 选 `main` 分支、目录选 `/ (root)` → Save。
+4. 等 1–2 分钟，访问 `https://<用户名>.github.io/quiz-site/` 即可。
+
+> 仓库已含 `.nojekyll`，避免 GitHub 用 Jekyll 二次处理页面。
 
 ## 常见问题
 - **提示「请填写 supabaseUrl」**：先在 `config.js` 填好连接信息。
