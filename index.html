@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>测评</title>
+  <link rel="stylesheet" href="css/style.css?v=6" />
+</head>
+<body>
+  <main class="app">
+
+    <!-- ① 密码门 -->
+    <section id="screen-gate" class="screen">
+      <div class="card center">
+        <h1 id="gate-title" class="big-title">测评</h1>
+        <p id="gate-intro" class="muted"></p>
+        <label class="field-label">访问码</label>
+        <input id="code-input" class="code-input" type="text" inputmode="text"
+               autocomplete="off" placeholder="请输入访问码" />
+        <button id="btn-start" class="btn btn-primary">开始测评</button>
+        <p id="gate-msg" class="msg"></p>
+        <p class="hint">每个访问码可测评 3 次</p>
+        <p id="gate-test" class="test-banner hidden"></p>
+      </div>
+    </section>
+
+    <!-- ② 答题 -->
+    <section id="screen-quiz" class="screen hidden">
+      <div class="card">
+        <div class="progress">
+          <span id="q-index">1</span> / <span id="q-total">10</span>
+        </div>
+        <div class="progress-bar"><i id="progress-fill"></i></div>
+        <h2 id="q-text" class="q-text"></h2>
+        <div id="options" class="options"></div>
+        <p id="quiz-msg" class="msg"></p>
+        <div class="quiz-nav">
+          <button id="btn-prev" class="btn btn-ghost" disabled>上一题</button>
+          <button id="btn-next" class="btn btn-primary">下一题</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ③ 结果 -->
+    <section id="screen-result" class="screen hidden">
+      <div class="card">
+        <div id="result-card" class="result-card"></div>
+
+        <div class="result-actions">
+          <button id="btn-save-img" class="btn btn-primary">保存结果长图</button>
+          <button id="btn-copy-link" class="btn btn-ghost">复制结果链接</button>
+          <button id="btn-retest" class="btn btn-ghost">再测一次</button>
+          <button id="btn-review" class="btn btn-ghost">好评有礼</button>
+        </div>
+        <p id="result-msg" class="msg"></p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 好评有礼弹窗 -->
+  <div id="review-modal" class="modal hidden">
+    <div class="modal-box">
+      <h3>好评有礼 🎁</h3>
+      <p id="review-text" class="review-text"></p>
+      <button id="btn-review-close" class="btn btn-primary">知道啦</button>
+    </div>
+  </div>
+
+  <!-- 依赖（运行时从 CDN 加载；如需离线可下载到 lib/ 并改成本地路径）。加 async 避免阻塞页面交互 -->
+  <!-- 依赖已下载到本地 lib/：自包含、国内访问稳定、不依赖外部 CDN -->
+  <script src="lib/supabase.min.js?v=9"></script>
+  <script src="lib/html2canvas.min.js?v=9"></script>
+  <script src="js/config.js?v=9"></script>
+  <script src="js/quizzes.js?v=9"></script>
+  <script src="js/supabase.js?v=9"></script>
+  <script src="js/render.js?v=9"></script>
+  <script src="js/app.js?v=9"></script>
+</body>
+</html>

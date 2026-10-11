@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>测评结果</title>
+  <link rel="stylesheet" href="css/style.css?v=9" />
+</head>
+<body>
+  <main class="app">
+    <section class="screen">
+      <div class="card">
+        <div id="result-card" class="result-card"></div>
+        <div class="result-actions">
+          <a id="btn-take" class="btn btn-primary" href="index.html">我也测一下</a>
+        </div>
+        <p id="result-msg" class="msg"></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- 依赖已下载到本地 lib/：自包含、不依赖外部 CDN -->
+  <script src="lib/supabase.min.js?v=9"></script>
+  <script src="js/config.js?v=9"></script>
+  <script src="js/quizzes.js?v=9"></script>
+  <script src="js/supabase.js?v=9"></script>
+  <script src="js/render.js?v=9"></script>
+  <script src="js/result-view.js?v=9"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# 项目记忆 / 工作日志（本地用，不随站点部署）
+.workbuddy/
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+*.log
