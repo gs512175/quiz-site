@@ -170,6 +170,9 @@
       if (!C || !C.supabaseUrl || C.supabaseUrl.includes("YOUR-PROJECT")) {
         throw new Error("请在 js/config.js 填写 supabaseUrl 和 supabaseAnonKey，或开启 testMode");
       }
+      if (!window.supabase || typeof window.supabase.createClient !== "function") {
+        throw new Error("依赖库 lib/supabase.min.js 没加载成功（请用 http:// 方式打开，别直接双击本地文件）");
+      }
       _client = window.supabase.createClient(C.supabaseUrl, C.supabaseAnonKey);
     }
     return _client;

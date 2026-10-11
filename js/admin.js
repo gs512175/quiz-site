@@ -40,8 +40,10 @@
       await renderQuizList();
       await refresh();
     } catch (e) {
-      setMsg($("login-msg"), "密钥错误或未配置 app.admin_key", "err");
-      console.error(e);
+      const m = (e && (e.message || e.error_description || e.hint || String(e))) || "未知错误";
+      const st = e && (e.status || e.code) ? "(" + (e.status || e.code) + ") " : "";
+      setMsg($("login-msg"), "连接失败 " + st + m, "err");
+      console.error("admin login error:", e);
     }
   }
 
