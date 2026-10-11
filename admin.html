@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>测评管理后台</title>
-  <link rel="stylesheet" href="css/style.css?v=15" />
+  <link rel="stylesheet" href="css/style.css?v=16" />
 </head>
 <body class="admin">
   <main class="app">
@@ -87,6 +87,12 @@
           </div>
           <p class="gen-tip">「绑定测评」留空 = 默认测评（跟随上面已启用的那套）。每个码可测 3 次。</p>
 
+          <div class="panel-tools">
+            <button id="btn-copy-codes" class="btn btn-ghost sm">复制全部访问码</button>
+            <button id="btn-copy-new" class="btn btn-ghost sm hidden">复制本批新码</button>
+            <button id="btn-export-csv" class="btn btn-ghost sm">导出 CSV</button>
+          </div>
+
           <p id="dash-msg" class="msg"></p>
           <div id="code-table" class="code-table"></div>
         </section>
@@ -95,10 +101,10 @@
   </main>
 
   <!-- 依赖已下载到本地 lib/：自包含、不依赖外部 CDN -->
-  <script src="lib/supabase.min.js?v=15"></script>
-  <script src="js/config.js?v=15"></script>
-  <script src="js/quizzes.js?v=15"></script>
-  <script src="js/supabase.js?v=15"></script>
-  <script src="js/admin.js?v=15"></script>
+  <script src="lib/supabase.min.js?v=16"></script>
+  <script src="js/config.js?v=16"></script>
+  <script src="js/quizzes.js?v=16"></script>
+  <script src="js/supabase.js?v=16"></script>
+  <script src="js/admin.js?v=16"></script>
 </body>
 </html>

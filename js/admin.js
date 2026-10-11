@@ -183,6 +183,65 @@
   }
 
   // ---------------- 访问码 ----------------
+  let lastRows = [];   // 当前列表（供复制/导出复用）
+  let lastGen = [];    // 刚生成的这一批码
+
+  async function copyText(text, okMsg, el) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        setMsg(el, okMsg, "ok");
+        return;
+      }
+      throw new Error("no clipboard");
+    } catch (e) {
+      prompt("复制下面的内容：", text);
+    }
+  }
+
+  // 复制全部访问码：一行一个，可直接发给买家
+  async function onCopyCodes() {
+    if (!lastRows.length) { setMsg($("dash-msg"), "还没有访问码，先生成一批", "err"); return; }
+    await copyText(lastRows.map((x) => x.code).join("\n"),
+      "已复制 " + lastRows.length + " 个访问码（一行一个）", $("dash-msg"));
+  }
+
+  // 复制刚生成的这一批（生成后按钮才出现）
+  async function onCopyNewCodes() {
+    if (!lastGen.length) { setMsg($("dash-msg"), "本批没有新码", "err"); return; }
+    await copyText(lastGen.join("\n"),
+      "已复制本批 " + lastGen.length + " 个新访问码", $("dash-msg"));
+  }
+
+  function csvCell(v) {
+    const s = String(v == null ? "" : v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  function download(filename, text) {
+    const blob = new Blob(["\ufeff" + text], { type: "text/csv;charset=utf-8" }); // BOM 防 Excel 中文乱码
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+  }
+
+  // 导出 CSV：访问码 / 绑定测评 / 用量 / 备注 / 创建时间
+  function onExportCsv() {
+    if (!lastRows.length) { setMsg($("dash-msg"), "还没有访问码，先生成一批", "err"); return; }
+    const rows = [["访问码", "绑定测评", "已用", "总次数", "备注", "创建时间"].join(",")];
+    lastRows.forEach((x) => {
+      const q = (x.quiz_id && QBYID[x.quiz_id]) || x.quiz_id || "默认";
+      rows.push([x.code, q, x.used, x.max_uses, x.note || "", new Date(x.created_at).toLocaleString("zh-CN")]
+        .map(csvCell).join(","));
+    });
+    const d = new Date();
+    const stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, "0") + String(d.getDate()).padStart(2, "0");
+    download("访问码_" + stamp + ".csv", rows.join("\r\n"));
+    setMsg($("dash-msg"), "已导出 " + lastRows.length + " 个访问码（CSV，可用 Excel 打开）", "ok");
+  }
+
   async function gen() {
     const n = Math.min(500, Math.max(1, parseInt($("gen-count").value, 10) || 1));
     const note = $("gen-note").value.trim();
@@ -194,6 +253,8 @@
       if (!r || r.ok === false) { setMsg($("dash-msg"), "生成失败，检查密钥", "err"); return; }
       const bound = quizId ? (QBYID[quizId] || quizId) : "默认测评";
       const cnt = r.codes ? r.codes.length : (r.count || n);
+      lastGen = r.codes || [];
+      if (lastGen.length && $("btn-copy-new")) $("btn-copy-new").classList.remove("hidden");
       setMsg($("dash-msg"), "已生成 " + cnt + " 个访问码，绑定测评：「" + bound + "」", "ok");
       await refresh();
     } catch (e) {
@@ -207,6 +268,7 @@
       const r = await window.SB.adminList();
       if (!r || r.ok === false) { $("code-table").innerHTML = "<p class='muted'>读取失败</p>"; return; }
       const rows = Array.isArray(r) ? r : (r.rows || []);
+      lastRows = rows;
       if (!rows.length) {
         $("code-table").innerHTML = window.SB.isTest
           ? "<p class='muted'>测试模式：点「生成」即可本地演示一批访问码（不写数据库）</p>"
@@ -247,6 +309,9 @@
     $("btn-logout").addEventListener("click", logout);
     $("btn-import").addEventListener("click", onImport);
     $("btn-copy-all-links").addEventListener("click", onCopyAllLinks);
+    $("btn-copy-codes").addEventListener("click", onCopyCodes);
+    $("btn-copy-new").addEventListener("click", onCopyNewCodes);
+    $("btn-export-csv").addEventListener("click", onExportCsv);
     // 题库列表事件委托
     $("quiz-list").addEventListener("click", (e) => {
       const btn = e.target.closest("button");

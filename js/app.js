@@ -51,46 +51,100 @@
     return u;
   }
 
+  // 读取实际生效的 CSS 内边距（自动适配小屏 / 横屏的媒体查询，不用写死常量）
+  function cssPad(sel, sides) {
+    if (typeof document.querySelector !== "function") return null;
+    const el = document.querySelector(sel);
+    if (!el || typeof window.getComputedStyle !== "function") return null;
+    const cs = window.getComputedStyle(el);
+    let sum = 0;
+    for (const p of sides) {
+      const v = parseFloat(cs[p]);
+      if (!v && v !== 0) return null;
+      sum += v;
+    }
+    return sum;
+  }
+
   function computeSizes() {
     const root = document.documentElement;
     const appW = Math.min(window.innerWidth || 375, 520);
-    const cardContent = appW - 16 * 2 - 20 * 2; // app 内边距(16*2) + 卡片内边距(20*2)
+    const padX = cssPad(".card", ["paddingLeft", "paddingRight"]) || 20 * 2;
+    const appPadX = cssPad(".app", ["paddingLeft", "paddingRight"]) || 16 * 2;
+    const cardContent = appW - appPadX - padX; // 屏宽 - 页面内边距 - 卡片内边距
 
     // —— 选项：2 列网格，取最高那张的固定高度 ——
     const optWidth = (cardContent - 10) / 2;          // 2 列，列间距 10
     const optUsable = optWidth - 14 * 2;              // 选项左右内边距各 14
     const perLineOpt = Math.max(1, Math.floor(optUsable / (15 * 0.95)));
-    let maxOptH = 0;
+    let maxOptH = 0, maxOptUnits = 0;
     Q.questions.forEach((q) =>
       q.options.forEach((o) => {
-        const lines = Math.max(1, Math.ceil(charUnits(o.text) / perLineOpt));
+        const units = charUnits(o.text);
+        const lines = Math.max(1, Math.ceil(units / perLineOpt));
         const h = Math.ceil(lines * 15 * 1.45 + 14 * 2 + 6); // 行高 + 内边距 + 安全余量
-        maxOptH = Math.max(maxOptH, h);
+        if (h > maxOptH) { maxOptH = h; maxOptUnits = units; }
       })
     );
 
     // —— 题干：取最长那道固定高度 ——
     const perLineQ = Math.max(1, Math.floor(cardContent / (19 * 0.95)));
-    let maxQH = 0;
+    let maxQH = 0, maxQUnits = 0;
     Q.questions.forEach((q) => {
-      const lines = Math.max(1, Math.ceil(charUnits(q.q) / perLineQ));
+      const units = charUnits(q.q);
+      const lines = Math.max(1, Math.ceil(units / perLineQ));
       const h = Math.ceil(lines * 19 * 1.6 + 6);
-      maxQH = Math.max(maxQH, h);
+      if (h > maxQH) { maxQH = h; maxQUnits = units; }
     });
 
-    // —— 整张答题卡片固定高度 ——
-    const cardH =
+    // 高度被压缩后同步调小字号，保证文字仍放得下（不溢出卡片）
+    const fitFs = (units, usable, maxH, startFs, minFs, pad) => {
+      let fs = startFs;
+      for (let i = 0; i < 8; i++) {
+        const perLine = Math.max(1, Math.floor(usable / (fs * 0.95)));
+        const lines = Math.max(1, Math.ceil(units / perLine));
+        if (lines * fs * 1.45 + pad <= maxH) return fs;
+        fs -= 0.5;
+        if (fs <= minFs) return minFs;
+      }
+      return Math.max(minFs, fs);
+    };
+    let optFs = 15, qFs = 19;
+
+    const FIXED =
       21 +                                   // 进度文字
       24 +                                   // 进度条
-      (maxQH + 18) +                         // 题干 + 下边距
-      (maxOptH * 2 + 10) +                   // 两行选项 + 间距
+      18 +                                   // 题干下边距
+      10 +                                   // 两行选项间距
       32 +                                   // 提示语
       64 +                                   // 上一题 / 下一题 按钮
-      44;                                    // 卡片内边距 22*2
+      (cssPad(".card", ["paddingTop", "paddingBottom"]) || 22 * 2); // 卡片上下内边距
+
+    // —— 一屏优先：卡片高度按「可视高度」压缩，尽量不出滚动条 ——
+    // 可视高度用 visualViewport（扣掉手机地址栏 / 键盘），比 innerHeight 准
+    const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight || 640;
+    const appPadY = cssPad(".app", ["paddingTop", "paddingBottom"]) || 16 * 2;
+    const availH = vh - appPadY - 8;                    // 8px 安全余量
+    let cardH = FIXED + maxQH + maxOptH * 2;
+
+    if (cardH > availH) {
+      const need = availH - FIXED;                      // 留给「题干 + 选项」的总高度
+      const cur = maxQH + maxOptH * 2;
+      if (need > 0 && need < cur) {
+        const k = need / cur;                           // 等比压缩，优先保证一屏放下
+        maxQH = Math.max(30, Math.floor(maxQH * k));
+        maxOptH = Math.max(40, Math.floor(maxOptH * k));
+        optFs = fitFs(maxOptUnits, optUsable, maxOptH, 15, 12, 14 * 2 + 6);
+        qFs = fitFs(maxQUnits, cardContent, maxQH, 19, 14, 6);
+        cardH = FIXED + maxQH + maxOptH * 2;
+      }
+    }
 
     root.style.setProperty("--opt-h", maxOptH + "px");
     root.style.setProperty("--q-h", maxQH + "px");
     root.style.setProperty("--quiz-h", cardH + "px");
+    root.style.setProperty("--opt-fs", optFs + "px");
+    root.style.setProperty("--q-fs", qFs + "px");
   }
 
   function setMsg(el, text, type) {
