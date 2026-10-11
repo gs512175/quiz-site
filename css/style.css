@@ -40,6 +40,11 @@ body {
 }
 .center { text-align: center; }
 
+/* 首屏加载态：题库就绪前只显示「加载中…」，避免先闪一下默认占位标题 */
+body.booting #screen-gate .card > *:not(.booting-tip) { display: none; }
+body:not(.booting) .booting-tip { display: none; }
+.booting-tip, .loading-tip { color: var(--muted); font-size: 14px; padding: 28px 0; margin: 0; text-align: center; }
+
 .big-title { font-size: 26px; margin: 4px 0 6px; }
 .muted { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
 .field-label { display: block; text-align: left; font-size: 13px; color: var(--muted); margin-bottom: 6px; }

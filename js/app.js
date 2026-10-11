@@ -99,28 +99,29 @@
   }
 
   // ---------- 初始化 ----------
-  async function init() {
-    // 多题库：先取「默认启用题」作为密码门的展示/兜底；
-    // 用户实际测哪一套，由所输访问码绑定的 quiz_id 决定（见 loadQuizByCode）
-    // 链接带 ?q=xxx 时，密码门直接展示该套测评（否则展示默认启用题）
-    if (urlQuizId) {
-      try {
-        const byUrl = await window.SB.getQuizById(urlQuizId);
-        if (byUrl && byUrl.questions && byUrl.questions.length) Q = byUrl;
-      } catch (e) {
-        console.warn("按链接取题库失败，回退默认启用题", e);
-      }
-    }
-    if (!Q) Q = await window.SB.getActiveQuiz();
-    if (!Q || !Q.questions) {
-      $("screen-gate").innerHTML = '<div class="card center"><h1 class="big-title">暂无题库</h1><p class="muted">请到后台添加或启用一套测评。</p></div>';
-      return;
-    }
+  // 本地内置题库（js/quizzes.js）立即命中 → 首屏 0 延迟，不必等 Supabase 网络往返
+  function localQuiz(id) {
+    if (!id) return null;
+    const q = (window.QUIZZES || []).find((x) => x.id === id);
+    return q && q.questions && q.questions.length ? q : null;
+  }
+
+  // 把当前题库画到密码门（标题 / 简介 / 题数 / 卡片尺寸）
+  function paintGate() {
     document.title = Q.title;
     $("gate-title").textContent = Q.title;
     $("gate-intro").textContent = Q.intro || "";
     $("q-total").textContent = Q.questions.length;
     computeSizes();
+    document.body.classList.remove("booting");
+  }
+
+  let bound = false;
+  // 题库一就绪就立刻可用：绑事件 + 恢复会话（不等网络请求）
+  function bindUI() {
+    if (bound || !Q || !Q.questions) return;
+    bound = true;
+    document.body.classList.remove("booting");
     let _rt;
     window.addEventListener("resize", () => { clearTimeout(_rt); _rt = setTimeout(computeSizes, 150); });
     if (window.SB && window.SB.isTest) {
@@ -147,6 +148,41 @@
     if (S.code && S.result) { renderResult(S.result); show("screen-result"); }
     else if (S.code) { renderQuestion(); show("screen-quiz"); }
     else show("screen-gate");
+  }
+
+  async function init() {
+    // ① 先用本地内置题库立刻出画面（链接 ?q= → 上次缓存的启用题 → config 默认题）
+    let preId = urlQuizId;
+    if (!preId) {
+      try { preId = localStorage.getItem("mq_active_id") || ""; } catch (e) { /* 隐私模式忽略 */ }
+      if (!preId) preId = C.defaultActiveId;
+    }
+    const local = localQuiz(preId);
+    if (local) { Q = local; paintGate(); }
+    bindUI();
+
+    // ② 再向服务器取最新题库（后台改过题目 / 自定义题库以服务器为准），静默替换
+    try {
+      let fresh = urlQuizId ? await window.SB.getQuizById(urlQuizId) : await window.SB.getActiveQuiz();
+      // 链接里的题库 id 不存在（且本地也没命中）→ 回退默认启用题，别白屏
+      if ((!fresh || !fresh.questions || !fresh.questions.length) && !Q) {
+        fresh = await window.SB.getActiveQuiz();
+      }
+      if (fresh && fresh.questions && fresh.questions.length) {
+        Q = fresh;
+        paintGate();
+        try { if (!urlQuizId) localStorage.setItem("mq_active_id", fresh.id); } catch (e) { /* 忽略 */ }
+      }
+    } catch (e) {
+      console.warn("题库刷新失败，沿用内置题库", e);
+    }
+
+    if (!Q || !Q.questions) {
+      document.body.classList.remove("booting");
+      $("screen-gate").innerHTML = '<div class="card center"><h1 class="big-title">暂无题库</h1><p class="muted">请到后台添加或启用一套测评。</p></div>';
+      return;
+    }
+    bindUI();
   }
 
   // ---------- 密码门 ----------
